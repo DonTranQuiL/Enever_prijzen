@@ -1,5 +1,8 @@
 # 🇳🇱 Enever Energieprijzen voor Home Assistant
 
+WORD EEN SUPPORTER WANT ENEVER IS ECHT GEWELDIG!!
+https://enever.nl/supporter-van-enever/
+
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)][hacs]
 [![Project Maintenance][maintenance_badge]](https://github.com/Malosaaa/ha-p2000)
 
