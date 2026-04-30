@@ -6,6 +6,7 @@ import logging
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.components import persistent_notification  # <-- DEZE IS NIEUW TOEGEVOEGD
 
 from .const import DOMAIN, CONF_API_TOKEN
 
@@ -19,7 +20,6 @@ class EneverCoordinator(DataUpdateCoordinator):
         self.gas_provider = config_entry.data.get("gas_provider", "easyEnergy")
         self.cache = cache_module
         
-        # We slaan stroom en gas apart op in de dictionary
         self.last_data = {"stroom": [], "gas": []} 
         self.error_count = 0
         self.last_update_success_timestamp = None
@@ -27,6 +27,22 @@ class EneverCoordinator(DataUpdateCoordinator):
         
         scan_interval = config_entry.options.get("scan_interval", 3600)
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=timedelta(seconds=scan_interval))
+
+    def _check_api_limit(self, data):
+        """Controleer of Enever aangeeft dat de API limiet is bereikt."""
+        if isinstance(data, dict) and data.get("code") == "6":
+            _LOGGER.warning("Enever API limiet is bereikt voor deze maand!")
+            # GECORRIGEERDE MANIER OM EEN NOTIFICATIE TE MAKEN
+            persistent_notification.async_create(
+                self.hass,
+                "Je gratis Enever API limiet (aantal verzoeken) voor deze maand is bereikt. "
+                "De integratie pauzeert automatisch en zal op de 1e dag van de volgende maand "
+                "vanzelf weer nieuwe prijzen ophalen.",
+                title="⚠️ Enever API Limiet Bereikt",
+                notification_id="enever_api_limit"
+            )
+            return True
+        return False
 
     async def _async_update_data(self):
         if self._is_first_run and (self.last_data.get("stroom") or self.last_data.get("gas")):
@@ -44,19 +60,22 @@ class EneverCoordinator(DataUpdateCoordinator):
         }
         
         results = {"stroom": [], "gas": []}
+        limit_reached = False
         
         try:
             # 1. Haal Stroom Vandaag op
             async with session.get(urls["stroom_vandaag"]) as resp:
                 if resp.status == 200:
                     data = await resp.json()
-                    if "data" in data:
+                    if self._check_api_limit(data): limit_reached = True
+                    if "data" in data and isinstance(data["data"], list):
                         results["stroom"].extend(data["data"])
                         
-            # 2. Haal Stroom Morgen op (deze is in de ochtend nog leeg, we negeren evt fouten)
+            # 2. Haal Stroom Morgen op
             async with session.get(urls["stroom_morgen"]) as resp:
                 if resp.status == 200:
                     data = await resp.json()
+                    if self._check_api_limit(data): limit_reached = True
                     if "data" in data and isinstance(data["data"], list):
                         results["stroom"].extend(data["data"])
                         
@@ -64,10 +83,14 @@ class EneverCoordinator(DataUpdateCoordinator):
             async with session.get(urls["gas_vandaag"]) as resp:
                 if resp.status == 200:
                     data = await resp.json()
-                    if "data" in data:
+                    if self._check_api_limit(data): limit_reached = True
+                    if "data" in data and isinstance(data["data"], list):
                         results["gas"].extend(data["data"])
 
-            # Sorteer alles netjes op datum
+            # Als de limiet is bereikt, gebruiken we gewoon de laatste data uit het geheugen
+            if limit_reached:
+                return self.last_data
+
             if results["stroom"]:
                 results["stroom"] = sorted(results["stroom"], key=lambda x: x.get("datum", ""))
             if results["gas"]:
@@ -78,6 +101,9 @@ class EneverCoordinator(DataUpdateCoordinator):
                 await self.hass.async_add_executor_job(self.cache.save_cache, results)
                 self.error_count = 0
                 self.last_update_success_timestamp = dt_util.utcnow()
+                
+                # GECORRIGEERDE MANIER OM EEN NOTIFICATIE TE VERWIJDEREN
+                persistent_notification.async_dismiss(self.hass, "enever_api_limit")
             else:
                 self.error_count += 1
                 
