@@ -145,7 +145,14 @@ content: >-
   {% else %} ⏳ Wachten op gegevens... {% endif %}
 
 ```
+## The Dashboardcard:
 <img width="509" height="818" alt="{31FCC404-B666-49B6-A710-F867DB43843E}" src="https://github.com/user-attachments/assets/5913c814-42e5-4aac-813c-b7b70ac6cbd4" />
+<br>
+<br>
+## New added api limit integration
+So when the api limit has been reached it now stops calling the api till the next of each month by storing it in the cache, and yes restart proof!
+U will get now an persistant notification in homeassistant that it will delete itself.
+<img width="512" height="221" alt="{5EA1AE55-8960-431F-90C5-6C9738CAFCB2}" src="https://github.com/user-attachments/assets/7cb31660-7c2c-428d-bc50-2580a37f25c5" />
 
 [hacs]: https://hacs.xyz
 [hacs_badge]: https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge
