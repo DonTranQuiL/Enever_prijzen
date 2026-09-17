@@ -37,13 +37,13 @@ def mock_coordinator_deps():
         mock_coord.async_request_refresh = AsyncMock()
         mock_coord_cls.return_value = mock_coord
 
-        yield _mock_cache, mock_coord
+        yield mock_cache, mock_coord
 
 
 @pytest.mark.asyncio
 async def test_setup_entry_no_cache(hass: HomeAssistant, mock_coordinator_deps):
     """Verify first-run setup invokes full foreground data collection on missing cache storage."""
-    _mock_cache, mock_coord = mock_coordinator_deps
+    mock_cache, mock_coord = mock_coordinator_deps
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={"api_token": "abc", "stroom_provider": "EE", "gas_provider": "EE"},
@@ -61,7 +61,7 @@ async def test_setup_entry_no_cache(hass: HomeAssistant, mock_coordinator_deps):
 @pytest.mark.asyncio
 async def test_setup_entry_with_cache(hass: HomeAssistant, mock_coordinator_deps):
     """Verify integration leverages local cached data background tasks cleanly on reload cycles."""
-    _mock_cache, mock_coord = mock_coordinator_deps
+    mock_cache, mock_coord = mock_coordinator_deps
     mock_cache.load_cache.return_value = {
         "stroom": [{"datum": "2026-05-20 17:00:00", "prijsEE": 0.15}]
     }
@@ -84,7 +84,7 @@ async def test_setup_entry_with_cache(hass: HomeAssistant, mock_coordinator_deps
 @pytest.mark.asyncio
 async def test_unload_and_services(hass: HomeAssistant, mock_coordinator_deps):
     """Verify framework registers command services correctly and tears down infrastructure elegantly."""
-    _mock_cache, mock_coord = mock_coordinator_deps
+    mock_cache, mock_coord = mock_coordinator_deps
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={"api_token": "abc", "stroom_provider": "EE", "gas_provider": "EE"},
