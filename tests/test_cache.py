@@ -1,4 +1,5 @@
-from unittest.mock import MagicMock, patch, mock_open
+from unittest.mock import MagicMock, mock_open, patch
+
 from custom_components.enever_prijzen.cache import EneverCache
 
 

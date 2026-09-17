@@ -1,11 +1,12 @@
-import pytest
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from custom_components.enever_prijzen.sensor import (
-    EneverStroomSensor,
     EneverGasSensor,
     EneverStatusSensor,
+    EneverStroomSensor,
 )
 
 
