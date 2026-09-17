@@ -1,19 +1,18 @@
-import pytest
 from unittest.mock import patch
 
+import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.util import dt as dt_util
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.enever_prijzen.const import (
-    DOMAIN,
     CONF_API_TOKEN,
-    CONF_STROOM_PROVIDER,
     CONF_GAS_PROVIDER,
     CONF_SCAN_INTERVAL,
+    CONF_STROOM_PROVIDER,
+    DOMAIN,
 )
-
 
 # =========================================================================
 # 1. FLOW ENGINE VALIDATION SECTOR
